@@ -1,8 +1,9 @@
 import winsound
+import keyboard
 
 def play():
     filename='media/UWU.wav'
-    winsound.PlaySound(filename, winsound.SND_FILENAME)
+    winsound.PlaySound(filename, winsound.SND_ASYNC)
 
 def pitchlow():
     winsound.PlaySound('media/UWU-low.wav', winsound.SND_FILENAME)
