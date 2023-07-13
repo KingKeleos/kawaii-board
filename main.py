@@ -1,19 +1,19 @@
 from twitch import twitch, subscribe
 from dotenv import load_dotenv
-from setup import setup
 from kawaii_board import board
 import multiprocessing as mp
 import json
 import threading
+from webhook import webhook
+from setup import setup
 
 from flask import Flask, request, Response, jsonify
 
 app = Flask(__name__)
-@app.route('/webhooks/callback', methods=['POST'])
+@app.route('/', methods=['POST'])
 def return_response():
-    subscribe.requestRewards()
-    board = mp.Process(target=board.kawaii_board())
-    board.start()
+    p = mp.Process(target=startBoard)
+    p.start()
     body = request.data
     body_json = json.loads(body)
     header = body_json["challenge"]
@@ -37,8 +37,21 @@ def return_rewardID():
     response = subscribe.getRewardID()
     return f"Response: {response}"
 
+def startApp():
+    thread = threading.Thread(target=app.run(host='0.0.0.0', port='443'))
+    thread.start()
+
+def startBoard():
+    thread = threading.Thread(target=board.kawaii_board())
+    thread.start()
 
 if __name__ == "__main__":
     load_dotenv()
     mp.freeze_support()
-    app.run(host='0.0.0.0', port='443')
+    print("starting tunnel for twitch api")
+    setup.TUNNEL = webhook.createTunnel()
+    server = mp.Process(target=startApp)
+    server.start()
+    print("after Server start:")
+    #response = subscribe.requestRewards()
+    #print(response.status_code)

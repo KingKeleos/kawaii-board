@@ -13,7 +13,7 @@ client_id = setup.CLIENT_ID
 client_secret = setup.CLIENT_SECRET
 
 def getAccessToken():
-    access_token = setup.ACCESS_TOKEN
+    access_token = setup.CLIENT_ACCESS_TOKEN
     authValidation = validateAuthentication(access_token=access_token)
     if authValidation:
         return access_token
