@@ -1,32 +1,44 @@
-import keyboard
-from sound import sound
-import multiprocessing
+from twitch import twitch, subscribe
+from dotenv import load_dotenv
+from setup import setup
+from kawaii_board import board
+import multiprocessing as mp
+import json
+import threading
 
-first_row = {'^','1','2','3','4','5','6','7','8','9','0','ß','backspace'}
-second_row=['tab','q','w','e','r','t','z','u','i','o','p','ü','+']
-third_row={'a','s','d','f','g','h','j','k','l','ö','ä','#'}
-fourht_row={'y','x','c','v','b','n','m',',','.','-'}
+from flask import Flask, request, Response, jsonify
 
-def kawaii_board():
-    while True:
-        try:
-            if keyboard.read_key() in first_row:
-                p = multiprocessing.Process(target=sound.pitchhighest)
-                p.start()
-            if keyboard.read_key() in second_row:
-                p = multiprocessing.Process(target=sound.pitchhigh)
-                p.start()
-            if keyboard.read_key() in third_row:
-                p = multiprocessing.Process(target=sound.play)
-                p.start()
-            if keyboard.read_key() in third_row:
-                p = multiprocessing.Process(target=sound.pitchlow)
-                p.start()
-            if keyboard.read_key() == "enter":
-                p = multiprocessing.Process(target=sound.pitch_enter)
-                p.start()
-        except:
-            break
+app = Flask(__name__)
+@app.route('/webhooks/callback', methods=['POST'])
+def return_response():
+    subscribe.requestRewards()
+    board = mp.Process(target=board.kawaii_board())
+    board.start()
+    body = request.data
+    body_json = json.loads(body)
+    header = body_json["challenge"]
+    return jsonify(header), 200
 
-if __name__ == '__main__':
-    kawaii_board()
+@app.route('/authorization')
+def return_authorization():
+    accessToken = twitch.getAccessToken()
+    gotToken = False
+    if accessToken:
+        gotToken = True
+    return f"Token created: {gotToken}"
+
+@app.route('/userID')
+def return_userID():
+    id = twitch.getUserID()
+    return f"UserID: {id}"
+
+@app.route('/rewardID')
+def return_rewardID():
+    response = subscribe.getRewardID()
+    return f"Response: {response}"
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    mp.freeze_support()
+    app.run(host='0.0.0.0', port='443')
